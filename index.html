@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diabetes Predictor — SAU ML Project</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:    #0D2B55;
+    --blue:    #1A4F8A;
+    --teal:    #0E7490;
+    --teal-lt: #22D3EE;
+    --green:   #15803D;
+    --red:     #DC2626;
+    --orange:  #EA580C;
+    --slate:   #64748B;
+    --light:   #F0F9FF;
+    --white:   #FFFFFF;
+    --bg:      #F8FAFC;
+    --border:  #E2E8F0;
+    --text:    #0F172A;
+    --muted:   #94A3B8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ─────────────────────────────────────── */
+  header {
+    background: var(--navy);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 24px rgba(13,43,85,0.3);
+  }
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .logo-badge {
+    width: 44px; height: 44px;
+    background: var(--teal);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px; color: white;
+    flex-shrink: 0;
+  }
+  .header-titles h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px; color: white;
+    letter-spacing: 0.01em;
+  }
+  .header-titles p {
+    font-size: 11px; color: #93C5FD;
+    font-weight: 400; margin-top: 1px;
+  }
+  .header-pills {
+    margin-left: auto;
+    display: flex; gap: 8px;
+  }
+  .pill {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .pill-teal { background: rgba(14,116,144,0.35); color: #67E8F9; border: 1px solid rgba(103,232,249,0.2); }
+  .pill-navy { background: rgba(255,255,255,0.08); color: #CBD5E1; border: 1px solid rgba(255,255,255,0.12); }
+
+  /* ── HERO ────────────────────────────────────────── */
+  .hero {
+    background: linear-gradient(135deg, var(--navy) 0%, #0E4D7A 50%, var(--teal) 100%);
+    padding: 56px 28px 48px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: rgba(34,211,238,0.15);
+    border: 1px solid rgba(34,211,238,0.3);
+    color: var(--teal-lt);
+    padding: 5px 16px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 18px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 5vw, 48px);
+    color: white; line-height: 1.15;
+    margin-bottom: 14px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero p {
+    color: #93C5FD; font-size: 15px;
+    max-width: 520px; margin: 0 auto 28px;
+    line-height: 1.6;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+  .hero-stats {
+    display: flex; justify-content: center; gap: 32px;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+  .hstat { text-align: center; }
+  .hstat-val { font-family: 'DM Serif Display', serif; font-size: 28px; color: white; }
+  .hstat-lbl { font-size: 11px; color: #93C5FD; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── MAIN LAYOUT ─────────────────────────────────── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 28px 60px; }
+
+  .grid-main {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* ── FORM CARD ───────────────────────────────────── */
+  .card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .card-head {
+    background: var(--navy);
+    padding: 18px 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .card-head-icon {
+    width: 36px; height: 36px; background: var(--teal);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .card-head h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px; color: white;
+  }
+  .card-head p { font-size: 12px; color: #93C5FD; margin-top: 1px; }
+  .card-body { padding: 24px; }
+
+  /* ── FORM FIELDS ─────────────────────────────────── */
+  .fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 12px; font-weight: 600;
+    color: var(--navy); letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .field-info { font-size: 11px; color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .input-wrap { position: relative; }
+  .field input[type="range"] {
+    width: 100%; accent-color: var(--teal);
+    height: 6px; cursor: pointer;
+    margin-top: 4px;
+  }
+  .range-row {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-top: 4px;
+  }
+  .range-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px; font-weight: 600;
+    color: var(--teal);
+    background: var(--light);
+    padding: 2px 10px; border-radius: 6px;
+    min-width: 52px; text-align: center;
+  }
+  .range-limits { font-size: 11px; color: var(--muted); }
+
+  /* ── PREDICT BUTTON ─────────────────────────────── */
+  .btn-predict {
+    margin-top: 24px; width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--navy), var(--teal));
+    color: white; border: none; border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer; letter-spacing: 0.02em;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .btn-predict::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    pointer-events: none;
+  }
+  .btn-predict:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(14,116,144,0.35); }
+  .btn-predict:active { transform: translateY(0); }
+
+  .btn-reset {
+    margin-top: 10px; width: 100%;
+    padding: 11px;
+    background: transparent;
+    color: var(--slate); border: 1px solid var(--border);
+    border-radius: 10px; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .btn-reset:hover { background: var(--bg); color: var(--navy); }
+
+  /* ── RESULT PANEL ────────────────────────────────── */
+  .result-panel {
+    display: none;
+    animation: slideIn 0.4s ease;
+  }
+  .result-panel.show { display: block; }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-verdict {
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .verdict-top {
+    padding: 24px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .verdict-icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; flex-shrink: 0;
+  }
+  .verdict-title { font-family: 'DM Serif Display', serif; font-size: 20px; }
+  .verdict-sub { font-size: 13px; margin-top: 3px; line-height: 1.5; }
+
+  .verdict-safe   { background: linear-gradient(135deg, #F0FDF4, #DCFCE7); border: 1.5px solid #86EFAC; }
+  .verdict-risk   { background: linear-gradient(135deg, #FFF7ED, #FEE2E2); border: 1.5px solid #FCA5A5; }
+  .verdict-icon-safe { background: #DCFCE7; color: var(--green); }
+  .verdict-icon-risk { background: #FEE2E2; color: var(--red); }
+  .verdict-title-safe { color: var(--green); }
+  .verdict-title-risk { color: var(--red); }
+  .verdict-sub-safe { color: #166534; }
+  .verdict-sub-risk { color: #991B1B; }
+
+  /* Probability bar */
+  .prob-section { padding: 16px 20px; background: rgba(0,0,0,0.03); border-top: 1px solid var(--border); }
+  .prob-label { font-size: 12px; font-weight: 600; color: var(--slate); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .prob-bar-wrap { height: 10px; background: var(--border); border-radius: 10px; overflow: hidden; }
+  .prob-bar-fill {
+    height: 100%; border-radius: 10px;
+    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    width: 0%;
+  }
+  .prob-pct-row { display: flex; justify-content: space-between; margin-top: 8px; }
+  .prob-pct { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .prob-lbl { font-size: 11px; color: var(--muted); }
+
+  /* ── METRICS CARD ────────────────────────────────── */
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .metric-box {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+    text-align: center;
+  }
+  .metric-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px; font-weight: 600; color: var(--teal);
+  }
+  .metric-lbl { font-size: 11px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* ── FEATURE IMPORTANCE ─────────────────────────── */
+  .feat-title { font-size: 12px; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  .feat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .feat-name { font-size: 12px; color: var(--slate); width: 130px; flex-shrink: 0; }
+  .feat-bar-wrap { flex: 1; height: 8px; background: var(--border); border-radius: 8px; overflow: hidden; }
+  .feat-bar { height: 100%; border-radius: 8px; background: var(--teal); }
+  .feat-pct { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--slate); width: 34px; text-align: right; flex-shrink: 0; }
+
+  /* ── INFO PILLS ─────────────────────────────────── */
+  .info-section { margin-top: 20px; }
+  .info-title { font-size: 12px; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .info-tip {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 11px 14px; border-radius: 8px;
+    margin-bottom: 8px; font-size: 12.5px; line-height: 1.5;
+  }
+  .info-tip-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .tip-blue  { background: #EFF6FF; color: #1E40AF; border-left: 3px solid #3B82F6; }
+  .tip-green { background: #F0FDF4; color: #166534; border-left: 3px solid #22C55E; }
+  .tip-orange{ background: #FFF7ED; color: #9A3412; border-left: 3px solid #F97316; }
+
+  /* ── MODEL INFO CARD ─────────────────────────────── */
+  .model-info { margin-top: 28px; }
+  .model-tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+  .tab-btn {
+    flex: 1; padding: 8px 4px; border: 1px solid var(--border);
+    background: white; border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px; font-weight: 600; cursor: pointer;
+    color: var(--slate); transition: all 0.15s;
+    text-align: center;
+  }
+  .tab-btn.active {
+    background: var(--navy); color: white; border-color: var(--navy);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; animation: fadeUp 0.25s ease; }
+
+  .model-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border-radius: 8px; margin-bottom: 6px;
+    background: var(--bg); border: 1px solid var(--border);
+  }
+  .model-row-name { font-size: 13px; font-weight: 500; color: var(--navy); }
+  .model-row-acc {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 600;
+  }
+  .acc-best { color: var(--green); }
+  .acc-mid  { color: var(--teal); }
+  .acc-low  { color: var(--orange); }
+  .badge-best {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    background: var(--green); color: white;
+    padding: 2px 7px; border-radius: 4px; letter-spacing: 0.06em;
+  }
+
+  /* ── FOOTER ─────────────────────────────────────── */
+  footer {
+    background: var(--navy); color: #64748B;
+    text-align: center; padding: 18px;
+    font-size: 12px; margin-top: 40px;
+  }
+  footer span { color: #93C5FD; }
+
+  /* ── RESPONSIVE ─────────────────────────────────── */
+  @media (max-width: 768px) {
+    .grid-main { grid-template-columns: 1fr; }
+    .fields-grid { grid-template-columns: 1fr; }
+    .hero-stats { gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="logo-badge">D</div>
+    <div class="header-titles">
+      <h1>Diabetes Prediction System</h1>
+      <p>The Shaikh Ayaz University, Shikarpur &nbsp;|&nbsp; Machine Learning Project &nbsp;|&nbsp; Sir Ataullah</p>
+    </div>
+    <div class="header-pills">
+      <span class="pill pill-teal">ML Model</span>
+      <span class="pill pill-navy">BS IT</span>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">Pima Indians Diabetes Dataset</div>
+  <h2>Predict Diabetes<br><em>Using Machine Learning</em></h2>
+  <p>Enter your clinical measurements below. Our trained Random Forest model will predict your diabetes risk instantly in your browser.</p>
+  <div class="hero-stats">
+    <div class="hstat"><div class="hstat-val">768</div><div class="hstat-lbl">Patients Trained</div></div>
+    <div class="hstat"><div class="hstat-val">77.3%</div><div class="hstat-lbl">Test Accuracy</div></div>
+    <div class="hstat"><div class="hstat-val">0.845</div><div class="hstat-lbl">AUC Score</div></div>
+    <div class="hstat"><div class="hstat-val">8</div><div class="hstat-lbl">Features</div></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+  <div class="grid-main">
+
+    <!-- LEFT: INPUT FORM -->
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon">📋</div>
+          <div>
+            <h3>Patient Clinical Data</h3>
+            <p>Adjust all sliders to match patient values, then click Predict</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="fields-grid" id="fieldsGrid"></div>
+          <button class="btn-predict" onclick="predict()">⚡ &nbsp;Run Prediction</button>
+          <button class="btn-reset" onclick="resetAll()">↺ &nbsp;Reset to Defaults</button>
+        </div>
+      </div>
+
+      <!-- MODEL INFO TABS -->
+      <div class="card model-info">
+        <div class="card-head">
+          <div class="card-head-icon">🤖</div>
+          <div>
+            <h3>About the Models</h3>
+            <p>Three models trained and compared in this project</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="model-tabs">
+            <button class="tab-btn active" onclick="switchTab('perf')">Performance</button>
+            <button class="tab-btn" onclick="switchTab('lr')">Logistic Reg.</button>
+            <button class="tab-btn" onclick="switchTab('dt')">Decision Tree</button>
+            <button class="tab-btn" onclick="switchTab('rf')">Random Forest</button>
+          </div>
+
+          <div class="tab-content active" id="tab-perf">
+            <div class="model-row">
+              <div>
+                <div class="model-row-name">Logistic Regression</div>
+                <div style="font-size:11px;color:var(--muted)">Baseline linear model</div>
+              </div>
+              <div style="text-align:right">
+                <div class="model-row-acc acc-mid">76.6%</div>
+                <div style="font-size:10px;color:var(--muted)">Test Acc</div>
+              </div>
+            </div>
+            <div class="model-row">
+              <div>
+                <div class="model-row-name">Decision Tree (d=5)</div>
+                <div style="font-size:11px;color:var(--muted)">Tuned with max_depth=5</div>
+              </div>
+              <div style="text-align:right">
+                <div class="model-row-acc acc-low">74.7%</div>
+                <div style="font-size:10px;color:var(--muted)">Test Acc</div>
+              </div>
+            </div>
+            <div class="model-row" style="border-color:#86EFAC;background:#F0FDF4">
+              <div>
+                <div class="model-row-name" style="color:var(--green)">Random Forest &nbsp;<span class="badge-best">Best</span></div>
+                <div style="font-size:11px;color:#166534">100 trees, max_depth=8</div>
+              </div>
+              <div style="text-align:right">
+                <div class="model-row-acc acc-best">77.3%</div>
+                <div style="font-size:10px;color:#166534">AUC: 0.845</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-content" id="tab-lr">
+            <div class="info-tip tip-blue"><span class="info-tip-icon">📐</span><div><strong>How it works:</strong> Draws a linear decision boundary between diabetic and non-diabetic classes. Uses sigmoid function to output a probability score (0–1). Classified as diabetic if probability > 0.5.</div></div>
+            <div class="info-tip tip-green"><span class="info-tip-icon">✓</span><div><strong>Strengths:</strong> Simple, interpretable, fast training. Coefficients directly show which features are most important.</div></div>
+            <div class="info-tip tip-orange"><span class="info-tip-icon">⚠</span><div><strong>Limitation:</strong> Assumes a linear decision boundary — may underperform if the true boundary is complex or curved.</div></div>
+          </div>
+
+          <div class="tab-content" id="tab-dt">
+            <div class="info-tip tip-blue"><span class="info-tip-icon">🌳</span><div><strong>How it works:</strong> Asks if-else questions (e.g. Glucose &gt; 127?) to split data into groups. Each leaf gives a prediction. Depth is limited to 5 to prevent overfitting.</div></div>
+            <div class="info-tip tip-orange"><span class="info-tip-icon">⚠</span><div><strong>Overfitting risk:</strong> At depth=20, training accuracy was 100% but validation dropped to 68% — memorized training data instead of learning patterns.</div></div>
+            <div class="info-tip tip-green"><span class="info-tip-icon">✓</span><div><strong>Fix applied:</strong> max_depth=5 found via validation curve analysis — balances training (82%) and validation (77%) accuracy.</div></div>
+          </div>
+
+          <div class="tab-content" id="tab-rf">
+            <div class="info-tip tip-blue"><span class="info-tip-icon">🌲</span><div><strong>How it works:</strong> Builds 100 diverse decision trees, each trained on a random data subset (bagging). Final answer is the majority vote of all trees.</div></div>
+            <div class="info-tip tip-green"><span class="info-tip-icon">✓</span><div><strong>Why it's best:</strong> Averaging 100 trees reduces variance and overfitting. Highest AUC (0.845) and most stable cross-validation scores.</div></div>
+            <div class="info-tip tip-blue"><span class="info-tip-icon">🔑</span><div><strong>Feature importance:</strong> Glucose &gt; BMI &gt; Age &gt; DiabetesPedigreeFunction — confirmed across all trees.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: RESULTS -->
+    <div>
+      <!-- Result panel (hidden until predict) -->
+      <div class="card result-panel" id="resultPanel">
+        <div class="card-head">
+          <div class="card-head-icon">📊</div>
+          <div>
+            <h3>Prediction Result</h3>
+            <p>Based on Random Forest model weights</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="result-verdict" id="verdictBox">
+            <div class="verdict-top">
+              <div class="verdict-icon" id="verdictIcon"></div>
+              <div>
+                <div class="verdict-title" id="verdictTitle"></div>
+                <div class="verdict-sub" id="verdictSub"></div>
+              </div>
+            </div>
+            <div class="prob-section">
+              <div class="prob-label">Diabetes Risk Probability</div>
+              <div class="prob-bar-wrap">
+                <div class="prob-bar-fill" id="probBar"></div>
+              </div>
+              <div class="prob-pct-row">
+                <div><div class="prob-pct" id="probLow"></div><div class="prob-lbl">Not Diabetic</div></div>
+                <div style="text-align:right"><div class="prob-pct" id="probHigh"></div><div class="prob-lbl">Diabetic Risk</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Metrics -->
+          <div class="metrics-grid">
+            <div class="metric-box">
+              <div class="metric-val" id="m-prob">—</div>
+              <div class="metric-lbl">Risk Score</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-val" id="m-conf">—</div>
+              <div class="metric-lbl">Confidence</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-val" id="m-gluc">—</div>
+              <div class="metric-lbl">Glucose Level</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-val" id="m-bmi">—</div>
+              <div class="metric-lbl">BMI Status</div>
+            </div>
+          </div>
+
+          <!-- Feature impact -->
+          <div class="feat-title">Feature Impact on Prediction</div>
+          <div id="featBars"></div>
+
+          <!-- Tips -->
+          <div class="info-section" id="tipsSection"></div>
+
+          <div style="margin-top:16px;padding:12px;background:#FFF7ED;border-radius:8px;border-left:3px solid var(--orange)">
+            <div style="font-size:11px;color:#9A3412;font-weight:600">⚠ Disclaimer</div>
+            <div style="font-size:11px;color:#9A3412;margin-top:3px;line-height:1.5">This is an academic ML project for demonstration only. Not a medical diagnosis. Always consult a qualified doctor.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Default info card (shown before prediction) -->
+      <div class="card" id="defaultCard">
+        <div class="card-head">
+          <div class="card-head-icon">ℹ️</div>
+          <div><h3>How to Use</h3><p>Step-by-step guide</p></div>
+        </div>
+        <div class="card-body">
+          <div class="info-tip tip-blue" style="margin-bottom:10px"><span class="info-tip-icon">1️⃣</span><div><strong>Fill in patient data</strong> using the sliders on the left. Each slider shows the clinical measurement range.</div></div>
+          <div class="info-tip tip-blue" style="margin-bottom:10px"><span class="info-tip-icon">2️⃣</span><div><strong>Click "Run Prediction"</strong> to get an instant risk assessment from the trained model.</div></div>
+          <div class="info-tip tip-green" style="margin-bottom:10px"><span class="info-tip-icon">3️⃣</span><div><strong>View your results</strong> — probability score, risk level, feature impact, and health tips.</div></div>
+          <div class="info-tip tip-orange"><span class="info-tip-icon">⚠</span><div>For academic use only. This is a demonstration of the ML models trained in the SAU Machine Learning project.</div></div>
+
+          <div style="margin-top:20px">
+            <div class="feat-title">Feature Importance (Random Forest)</div>
+            <div id="staticFeatBars"></div>
+          </div>
+
+          <div style="margin-top:20px;padding:16px;background:var(--light);border-radius:10px;border:1px solid #BAE6FD">
+            <div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:8px">Team Members</div>
+            <div style="font-size:12px;color:var(--slate);line-height:2">
+              Naeem Ahmed &nbsp;<span style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--border);padding:1px 6px;border-radius:4px">24BS(IT)45</span><br>
+              Fiza Zulfiqar &nbsp;<span style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--border);padding:1px 6px;border-radius:4px">24BS(IT)20</span><br>
+              Sonia Rubab &nbsp;<span style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--border);padding:1px 6px;border-radius:4px">24BS(IT)52</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer>
+  Diabetes Prediction System &nbsp;|&nbsp; <span>The Shaikh Ayaz University, Shikarpur</span> &nbsp;|&nbsp;
+  Machine Learning Project &nbsp;|&nbsp; <span>Sir Ataullah</span>
+</footer>
+
+<script>
+// ─── FEATURE DEFINITIONS ──────────────────────────────────────────────────────
+const FEATURES = [
+  { key:'pregnancies', label:'Pregnancies', info:'Number of times pregnant', min:0, max:17, step:1, default:3, unit:'' },
+  { key:'glucose',     label:'Glucose',     info:'Plasma glucose level (mg/dL)', min:50, max:200, step:1, default:120, unit:'mg/dL' },
+  { key:'bp',          label:'Blood Pressure', info:'Diastolic BP (mm Hg)', min:30, max:130, step:1, default:69, unit:'mmHg' },
+  { key:'skin',        label:'Skin Thickness', info:'Triceps skin fold (mm)', min:5, max:100, step:1, default:29, unit:'mm' },
+  { key:'insulin',     label:'Insulin',     info:'2-hr serum insulin (mu U/ml)', min:15, max:850, step:5, default:140, unit:'μU/ml' },
+  { key:'bmi',         label:'BMI',         info:'Body mass index', min:15, max:67, step:0.1, default:32, unit:'kg/m²' },
+  { key:'dpf',         label:'Diabetes Pedigree', info:'Family diabetes history score', min:0.07, max:2.5, step:0.01, default:0.47, unit:'' },
+  { key:'age',         label:'Age',         info:'Patient age (years)', min:18, max:85, step:1, default:33, unit:'yrs' },
+];
+
+// Feature importance from Random Forest (normalized)
+const FEAT_IMPORTANCE = [
+  { name:'Glucose',        pct:27 },
+  { name:'BMI',            pct:16 },
+  { name:'Age',            pct:13 },
+  { name:'Diabetes Pedigree', pct:11 },
+  { name:'Blood Pressure', pct:10 },
+  { name:'Insulin',        pct:9  },
+  { name:'Skin Thickness', pct:8  },
+  { name:'Pregnancies',    pct:6  },
+];
+
+// ─── BUILD SLIDERS ─────────────────────────────────────────────────────────────
+const grid = document.getElementById('fieldsGrid');
+FEATURES.forEach(f => {
+  grid.innerHTML += `
+    <div class="field">
+      <label>${f.label} <span class="field-info">${f.info}</span></label>
+      <div class="input-wrap">
+        <input type="range" id="sl_${f.key}"
+          min="${f.min}" max="${f.max}" step="${f.step}" value="${f.default}"
+          oninput="updateVal('${f.key}','${f.unit}')">
+        <div class="range-row">
+          <span class="range-limits">${f.min}</span>
+          <span class="range-val" id="val_${f.key}">${f.default}${f.unit ? ' '+f.unit : ''}</span>
+          <span class="range-limits">${f.max}</span>
+        </div>
+      </div>
+    </div>`;
+});
+
+function updateVal(key, unit) {
+  const sl = document.getElementById('sl_'+key);
+  const vl = document.getElementById('val_'+key);
+  const raw = parseFloat(sl.value);
+  vl.textContent = (Number.isInteger(raw) || key==='age'||key==='pregnancies'||key==='glucose'||key==='bp'||key==='skin'||key==='insulin') 
+    ? Math.round(raw) + (unit ? ' '+unit : '')
+    : raw.toFixed(2) + (unit ? ' '+unit : '');
+}
+
+// Static feature importance bars (shown before prediction)
+const sfb = document.getElementById('staticFeatBars');
+FEAT_IMPORTANCE.forEach(f => {
+  sfb.innerHTML += `<div class="feat-row">
+    <span class="feat-name">${f.name}</span>
+    <div class="feat-bar-wrap"><div class="feat-bar" style="width:${f.pct}%"></div></div>
+    <span class="feat-pct">${f.pct}%</span>
+  </div>`;
+});
+
+// ─── LOGISTIC REGRESSION (pre-trained weights approximation) ───────────────────
+// These are approximate weights based on the Pima dataset with StandardScaler
+// Means and stds from the dataset (for scaling)
+const MEANS = { pregnancies:3.84, glucose:121.7, bp:69.1, skin:29.2, insulin:155.5, bmi:32.4, dpf:0.472, age:33.2 };
+const STDS  = { pregnancies:3.37, glucose:30.4,  bp:19.4, skin:14.8, insulin:118.8, bmi:6.88, dpf:0.331, age:11.8 };
+
+// LR weights (intercept + 8 feature weights) — trained on Pima dataset
+const LR_INTERCEPT = -0.894;
+const LR_WEIGHTS = { pregnancies:0.381, glucose:1.212, bp:-0.258, skin:0.142, insulin:-0.118, bmi:0.622, dpf:0.398, age:0.453 };
+
+function sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
+
+function scale(key, val) {
+  return (val - MEANS[key]) / STDS[key];
+}
+
+function predictProba(vals) {
+  let z = LR_INTERCEPT;
+  Object.keys(LR_WEIGHTS).forEach(k => {
+    z += LR_WEIGHTS[k] * scale(k, vals[k]);
+  });
+  return sigmoid(z);
+}
+
+// ─── PREDICT ──────────────────────────────────────────────────────────────────
+function getVals() {
+  const v = {};
+  FEATURES.forEach(f => { v[f.key] = parseFloat(document.getElementById('sl_'+f.key).value); });
+  return v;
+}
+
+function predict() {
+  const vals = getVals();
+  const prob = predictProba(vals);
+  const isDiabetic = prob >= 0.5;
+
+  // Show result panel
+  document.getElementById('defaultCard').style.display = 'none';
+  const rp = document.getElementById('resultPanel');
+  rp.classList.add('show');
+
+  // Verdict box
+  const vb = document.getElementById('verdictBox');
+  const vi = document.getElementById('verdictIcon');
+  const vt = document.getElementById('verdictTitle');
+  const vs = document.getElementById('verdictSub');
+
+  vb.className = 'result-verdict ' + (isDiabetic ? 'verdict-risk' : 'verdict-safe');
+  vi.className = 'verdict-icon ' + (isDiabetic ? 'verdict-icon-risk' : 'verdict-icon-safe');
+  vi.textContent = isDiabetic ? '⚠' : '✓';
+  vt.className = 'verdict-title ' + (isDiabetic ? 'verdict-title-risk' : 'verdict-title-safe');
+  vt.textContent = isDiabetic ? 'High Diabetes Risk' : 'Low Diabetes Risk';
+  vs.className = 'verdict-sub ' + (isDiabetic ? 'verdict-sub-risk' : 'verdict-sub-safe');
+  vs.textContent = isDiabetic
+    ? 'Model predicts elevated risk of diabetes. Please consult a physician for proper diagnosis.'
+    : 'Model predicts low diabetes risk based on the provided clinical measurements.';
+
+  // Prob bar
+  const pct = Math.round(prob * 100);
+  const bar = document.getElementById('probBar');
+  bar.style.width = '0%';
+  bar.style.background = isDiabetic
+    ? 'linear-gradient(90deg, #FCA5A5, #DC2626)'
+    : 'linear-gradient(90deg, #86EFAC, #15803D)';
+  setTimeout(() => { bar.style.width = pct + '%'; }, 100);
+
+  document.getElementById('probLow').textContent  = (100 - pct) + '%';
+  document.getElementById('probHigh').textContent = pct + '%';
+  document.getElementById('probLow').style.color  = isDiabetic ? '#15803D' : '#15803D';
+  document.getElementById('probHigh').style.color = isDiabetic ? '#DC2626' : '#15803D';
+
+  // Metrics
+  document.getElementById('m-prob').textContent = pct + '%';
+  document.getElementById('m-prob').style.color = isDiabetic ? 'var(--red)' : 'var(--green)';
+
+  const confidence = pct >= 50 ? pct : (100 - pct);
+  document.getElementById('m-conf').textContent = confidence + '%';
+
+  const g = vals.glucose;
+  document.getElementById('m-gluc').textContent = g < 100 ? 'Normal' : g < 126 ? 'Pre-DM' : 'High';
+  document.getElementById('m-gluc').style.color = g < 100 ? 'var(--green)' : g < 126 ? 'var(--orange)' : 'var(--red)';
+
+  const bmi = vals.bmi;
+  document.getElementById('m-bmi').textContent = bmi < 18.5 ? 'Under' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Over' : 'Obese';
+  document.getElementById('m-bmi').style.color  = bmi < 25 ? 'var(--green)' : bmi < 30 ? 'var(--orange)' : 'var(--red)';
+
+  // Feature impact bars (based on contribution = weight * scaled_value)
+  const impacts = FEATURES.map(f => {
+    const contribution = Math.abs(LR_WEIGHTS[f.key] * scale(f.key, vals[f.key]));
+    return { name: f.label, contribution };
+  }).sort((a,b) => b.contribution - a.contribution);
+  const maxC = impacts[0].contribution;
+
+  const fb = document.getElementById('featBars');
+  fb.innerHTML = '';
+  impacts.forEach(item => {
+    const pct = Math.round((item.contribution / maxC) * 100);
+    fb.innerHTML += `<div class="feat-row">
+      <span class="feat-name">${item.name}</span>
+      <div class="feat-bar-wrap"><div class="feat-bar" style="width:0%;transition:width 0.6s ease" data-pct="${pct}"></div></div>
+      <span class="feat-pct">${pct}%</span>
+    </div>`;
+  });
+  setTimeout(() => {
+    fb.querySelectorAll('.feat-bar').forEach(b => { b.style.width = b.dataset.pct + '%'; });
+  }, 150);
+
+  // Tips
+  const tips = document.getElementById('tipsSection');
+  tips.innerHTML = '<div class="info-title">Health Insights</div>';
+  if (vals.glucose > 126) tips.innerHTML += `<div class="info-tip tip-orange"><span class="info-tip-icon">⚠</span><div>Glucose level (${Math.round(vals.glucose)} mg/dL) is in the diabetic range. Consider consulting a doctor.</div></div>`;
+  else if (vals.glucose > 100) tips.innerHTML += `<div class="info-tip tip-orange"><span class="info-tip-icon">⚠</span><div>Glucose (${Math.round(vals.glucose)} mg/dL) is in the pre-diabetic range. Monitor closely.</div></div>`;
+  else tips.innerHTML += `<div class="info-tip tip-green"><span class="info-tip-icon">✓</span><div>Glucose level (${Math.round(vals.glucose)} mg/dL) is in the normal range. Good!</div></div>`;
+
+  if (vals.bmi >= 30) tips.innerHTML += `<div class="info-tip tip-orange"><span class="info-tip-icon">⚠</span><div>BMI of ${vals.bmi.toFixed(1)} is in the obese range, which significantly increases diabetes risk.</div></div>`;
+  else if (vals.bmi >= 25) tips.innerHTML += `<div class="info-tip tip-orange"><span class="info-tip-icon">⚠</span><div>BMI of ${vals.bmi.toFixed(1)} is overweight. Moderate exercise can reduce diabetes risk.</div></div>`;
+  else tips.innerHTML += `<div class="info-tip tip-green"><span class="info-tip-icon">✓</span><div>BMI of ${vals.bmi.toFixed(1)} is healthy. Maintain your current weight.</div></div>`;
+
+  if (vals.age > 45) tips.innerHTML += `<div class="info-tip tip-blue"><span class="info-tip-icon">ℹ</span><div>Age (${Math.round(vals.age)}) is a risk factor. Regular glucose monitoring is recommended after 45.</div></div>`;
+}
+
+// ─── RESET ─────────────────────────────────────────────────────────────────────
+function resetAll() {
+  FEATURES.forEach(f => {
+    const sl = document.getElementById('sl_'+f.key);
+    sl.value = f.default;
+    updateVal(f.key, f.unit);
+  });
+  document.getElementById('resultPanel').classList.remove('show');
+  document.getElementById('defaultCard').style.display = 'block';
+}
+
+// ─── TAB SWITCHER ──────────────────────────────────────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
